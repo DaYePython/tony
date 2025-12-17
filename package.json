@@ -1,0 +1,23 @@
+{
+  "name": "keyboard-sequence-listener-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A monorepo for keyboard sequence listener library and playground",
+  "scripts": {
+    "build": "pnpm --filter keyboard-sequence-listener build",
+    "dev:lib": "pnpm --filter keyboard-sequence-listener dev",
+    "dev:playground": "pnpm --filter playground dev",
+    "dev": "pnpm --parallel --filter keyboard-sequence-listener --filter playground dev"
+  },
+  "keywords": [
+    "keyboard",
+    "sequence",
+    "konami",
+    "listener",
+    "hotkey",
+    "monorepo"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {}
+}

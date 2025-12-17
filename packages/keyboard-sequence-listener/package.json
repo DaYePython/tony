@@ -1,0 +1,32 @@
+{
+  "name": "keyboard-sequence-listener",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A library to detect keyboard input sequences like Konami Code",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "keyboard",
+    "sequence",
+    "konami",
+    "listener",
+    "hotkey"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.5",
+    "rollup": "^4.9.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "files": [
+    "dist"
+  ]
+}
