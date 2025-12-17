@@ -7,7 +7,10 @@
     "build": "pnpm --filter keyboard-sequence-listener build",
     "dev:lib": "pnpm --filter keyboard-sequence-listener dev",
     "dev:playground": "pnpm --filter playground dev",
-    "dev": "pnpm --parallel --filter keyboard-sequence-listener --filter playground dev"
+    "dev": "pnpm --parallel --filter keyboard-sequence-listener --filter playground dev",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && changeset publish"
   },
   "keywords": [
     "keyboard",
@@ -19,5 +22,7 @@
   ],
   "author": "",
   "license": "MIT",
-  "devDependencies": {}
+  "devDependencies": {
+    "@changesets/cli": "^2.29.8"
+  }
 }
