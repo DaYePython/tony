@@ -1,6 +1,6 @@
 {
   "name": "@daye-cli/keyboard-sequence-listener",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "A library to detect keyboard input sequences like Konami Code",
   "main": "dist/index.js",
