@@ -2,11 +2,8 @@ name: Publish to NPM
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'packages/keyboard-sequence-listener/**'
-      - '.github/workflows/publish.yml'
+    tags:
+      - 'v*.*.*'
 
 jobs:
   publish:
