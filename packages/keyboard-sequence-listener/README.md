@@ -2,6 +2,8 @@
 
 A lightweight TypeScript library to detect keyboard input sequences (like the Konami Code: ↑↑↓↓←→←→BA).
 
+English | [简体中文](./README.zh-CN.md)
+
 ## Features
 
 ✨ **Simple API** - Easy to use with TypeScript support  

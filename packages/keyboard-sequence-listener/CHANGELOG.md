@@ -1,5 +1,11 @@
 # @daye-cli/keyboard-sequence-listener
 
+## 1.0.3
+
+### Patch Changes
+
+- Add Chinese documentation (README.zh-CN.md)
+
 ## 1.0.2
 
 ### Patch Changes
