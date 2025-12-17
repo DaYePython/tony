@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "vue": "^3.5.24",
-    "keyboard-sequence-listener": "workspace:*"
+    "@daye-cli/keyboard-sequence-listener": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

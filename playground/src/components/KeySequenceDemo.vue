@@ -58,7 +58,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { KeySequenceListener, KONAMI_CODE } from 'keyboard-sequence-listener'
+import { KeySequenceListener, KONAMI_CODE } from '@daye-cli/keyboard-sequence-listener'
 
 const sequence = ref(KONAMI_CODE)
 const progress = ref(0)
