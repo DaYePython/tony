@@ -194,7 +194,7 @@ export class KeySequenceListener {
   }
 
   private handleKeyPress(event: KeyboardEvent): void {
-    this.processInput(event.key, event.code, 'keyboard');
+    this.processInput(event.key, 'keyboard', event.code);
   }
 
   private pollGamepads = (): void => {
@@ -232,11 +232,11 @@ export class KeySequenceListener {
   private handleGamepadButtonPress(buttonIndex: number): void {
     const key = GAMEPAD_BUTTON_MAP[buttonIndex];
     if (key) {
-      this.processInput(key, undefined, 'gamepad');
+      this.processInput(key, 'gamepad');
     }
   }
 
-  private processInput(key: string, code: string | undefined, source: 'keyboard' | 'gamepad'): void {
+  private processInput(key: string, source: 'keyboard' | 'gamepad', code?: string): void {
     if (this.onInput) {
       this.onInput(key, source);
     }
