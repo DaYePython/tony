@@ -71,8 +71,9 @@ export interface KeySequenceListenerOptions {
   /**
    * Callback function to execute on every key press (match or mismatch)
    * @param key - The key that was pressed
+   * @param source - The source of the input: 'keyboard' or 'gamepad'
    */
-  onInput?: (key: string) => void;
+  onInput?: (key: string, source: 'keyboard' | 'gamepad') => void;
   
   /**
    * Time window in milliseconds for the sequence to be completed (default: 5000ms)
@@ -101,7 +102,7 @@ export class KeySequenceListener {
   private onProgress?: (currentIndex: number, totalLength: number) => void;
   private onMismatch?: () => void;
   private onTimeout?: () => void;
-  private onInput?: (key: string) => void;
+  private onInput?: (key: string, source: 'keyboard' | 'gamepad') => void;
   private timeout: number;
   private resetOnMismatch: boolean;
   private once: boolean;
@@ -193,7 +194,7 @@ export class KeySequenceListener {
   }
 
   private handleKeyPress(event: KeyboardEvent): void {
-    this.processInput(event.key, event.code);
+    this.processInput(event.key, event.code, 'keyboard');
   }
 
   private pollGamepads = (): void => {
@@ -231,13 +232,13 @@ export class KeySequenceListener {
   private handleGamepadButtonPress(buttonIndex: number): void {
     const key = GAMEPAD_BUTTON_MAP[buttonIndex];
     if (key) {
-      this.processInput(key);
+      this.processInput(key, undefined, 'gamepad');
     }
   }
 
-  private processInput(key: string, code?: string): void {
+  private processInput(key: string, code?: string, source: 'keyboard' | 'gamepad' = 'keyboard'): void {
     if (this.onInput) {
-      this.onInput(key);
+      this.onInput(key, source);
     }
 
     const expectedKey = this.sequence[this.currentIndex];
