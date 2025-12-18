@@ -224,13 +224,15 @@ onMounted(() => {
     updateKeyHistory(event.key)
   }
 
-  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keydown', handleKeyDown!)
 
   onUnmounted(() => {
     konamiListener?.destroy()
     customListener?.destroy()
     onceListener?.destroy()
-    window.removeEventListener('keydown', handleKeyDown)
+    if (handleKeyDown) {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
   })
 })
 </script>
