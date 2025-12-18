@@ -288,8 +288,10 @@ onMounted(() => {
     onProgress: (current) => {
       gamepadProgress.value = current
     },
-    onInput: (key) => {
-      updateGamepadHistory(key)
+    onInput: (key, source) => {
+      if (source === 'gamepad') {
+        updateGamepadHistory(key)
+      }
     },
     onMismatch: () => {
       triggerErrorShake()
