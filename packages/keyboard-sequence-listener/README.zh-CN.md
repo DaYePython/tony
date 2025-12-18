@@ -160,6 +160,7 @@ interface KeySequenceListenerOptions {
 - `onTimeout` - 可选的回调函数，当按键间隔时间过长时触发
 - `timeout` - 序列自动重置前的毫秒数（默认：5000ms）
 - `once` - 如果为 true，监听器在首次匹配后自动停止
+- `enableGamepad` - 是否启用手柄支持（默认：false）
 
 #### 方法
 
@@ -181,6 +182,48 @@ import { KONAMI_CODE } from '@daye-cli/keyboard-sequence-listener';
 **可用常量：**
 
 - `KONAMI_CODE` - 经典的 ↑↑↓↓←→←→BA 序列
+
+### 手柄支持
+
+本库也支持手柄输入序列。你可以在同一个序列中混合使用键盘和手柄输入。
+
+```typescript
+import { KeySequenceListener, GamepadButtons } from '@daye-cli/keyboard-sequence-listener';
+
+const listener = new KeySequenceListener({
+  sequence: [
+    GamepadButtons.Up,
+    GamepadButtons.Up,
+    GamepadButtons.Down,
+    GamepadButtons.Down,
+    GamepadButtons.Left,
+    GamepadButtons.Right,
+    GamepadButtons.Left,
+    GamepadButtons.Right,
+    GamepadButtons.B,
+    GamepadButtons.A
+  ],
+  enableGamepad: true, // 启用手柄支持
+  onMatch: () => {
+    console.log('手柄序列匹配成功！');
+  }
+});
+
+listener.start();
+```
+
+**支持的手柄按键：**
+
+- `GamepadButtons.A` (底部按钮)
+- `GamepadButtons.B` (右侧按钮)
+- `GamepadButtons.X` (左侧按钮)
+- `GamepadButtons.Y` (顶部按钮)
+- `GamepadButtons.LB`, `GamepadButtons.RB` (肩键)
+- `GamepadButtons.LT`, `GamepadButtons.RT` (扳机键)
+- `GamepadButtons.Up`, `GamepadButtons.Down`, `GamepadButtons.Left`, `GamepadButtons.Right` (方向键)
+- `GamepadButtons.Start`, `GamepadButtons.Back`
+- `GamepadButtons.LS`, `GamepadButtons.RS` (摇杆点击)
+- `GamepadButtons.Home`
 
 ## 按键代码参考
 

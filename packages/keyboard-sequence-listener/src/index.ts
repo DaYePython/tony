@@ -1,5 +1,45 @@
 export type KeySequence = string[];
 
+export const GamepadButtons = {
+  A: 'GamepadA',
+  B: 'GamepadB',
+  X: 'GamepadX',
+  Y: 'GamepadY',
+  LB: 'GamepadLB',
+  RB: 'GamepadRB',
+  LT: 'GamepadLT',
+  RT: 'GamepadRT',
+  Back: 'GamepadBack',
+  Start: 'GamepadStart',
+  LS: 'GamepadLS',
+  RS: 'GamepadRS',
+  Up: 'GamepadUp',
+  Down: 'GamepadDown',
+  Left: 'GamepadLeft',
+  Right: 'GamepadRight',
+  Home: 'GamepadHome',
+} as const;
+
+const GAMEPAD_BUTTON_MAP = [
+  GamepadButtons.A,
+  GamepadButtons.B,
+  GamepadButtons.X,
+  GamepadButtons.Y,
+  GamepadButtons.LB,
+  GamepadButtons.RB,
+  GamepadButtons.LT,
+  GamepadButtons.RT,
+  GamepadButtons.Back,
+  GamepadButtons.Start,
+  GamepadButtons.LS,
+  GamepadButtons.RS,
+  GamepadButtons.Up,
+  GamepadButtons.Down,
+  GamepadButtons.Left,
+  GamepadButtons.Right,
+  GamepadButtons.Home,
+];
+
 export interface KeySequenceListenerOptions {
   /**
    * The sequence of keys to listen for (e.g., ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown'])
@@ -27,6 +67,12 @@ export interface KeySequenceListenerOptions {
    * Callback function to execute when the sequence times out
    */
   onTimeout?: () => void;
+
+  /**
+   * Callback function to execute on every key press (match or mismatch)
+   * @param key - The key that was pressed
+   */
+  onInput?: (key: string) => void;
   
   /**
    * Time window in milliseconds for the sequence to be completed (default: 5000ms)
@@ -42,6 +88,11 @@ export interface KeySequenceListenerOptions {
    * If true, automatically stop listening after the first successful match (default: false)
    */
   once?: boolean;
+
+  /**
+   * Whether to enable gamepad support (default: false)
+   */
+  enableGamepad?: boolean;
 }
 
 export class KeySequenceListener {
@@ -50,13 +101,17 @@ export class KeySequenceListener {
   private onProgress?: (currentIndex: number, totalLength: number) => void;
   private onMismatch?: () => void;
   private onTimeout?: () => void;
+  private onInput?: (key: string) => void;
   private timeout: number;
   private resetOnMismatch: boolean;
   private once: boolean;
+  private enableGamepad: boolean;
   private currentIndex: number = 0;
   private timeoutId: number | null = null;
   private isListening: boolean = false;
   private boundHandler: (event: KeyboardEvent) => void;
+  private animationFrameId: number | null = null;
+  private previousButtonStates: boolean[][] = [];
 
   constructor(options: KeySequenceListenerOptions) {
     this.sequence = options.sequence;
@@ -64,9 +119,11 @@ export class KeySequenceListener {
     this.onProgress = options.onProgress;
     this.onMismatch = options.onMismatch;
     this.onTimeout = options.onTimeout;
+    this.onInput = options.onInput;
     this.timeout = options.timeout ?? 5000;
     this.resetOnMismatch = options.resetOnMismatch ?? true;
     this.once = options.once ?? false;
+    this.enableGamepad = options.enableGamepad ?? false;
     this.boundHandler = this.handleKeyPress.bind(this);
   }
 
@@ -83,6 +140,10 @@ export class KeySequenceListener {
     
     if (typeof window !== 'undefined') {
       window.addEventListener('keydown', this.boundHandler);
+      
+      if (this.enableGamepad) {
+        this.pollGamepads();
+      }
     }
   }
 
@@ -100,6 +161,11 @@ export class KeySequenceListener {
     
     if (typeof window !== 'undefined') {
       window.removeEventListener('keydown', this.boundHandler);
+      
+      if (this.animationFrameId !== null) {
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+      }
     }
   }
 
@@ -127,10 +193,57 @@ export class KeySequenceListener {
   }
 
   private handleKeyPress(event: KeyboardEvent): void {
+    this.processInput(event.key, event.code);
+  }
+
+  private pollGamepads = (): void => {
+    if (!this.isListening) return;
+
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+    
+    for (let i = 0; i < gamepads.length; i++) {
+      const gamepad = gamepads[i];
+      if (!gamepad) continue;
+
+      // Initialize previous state if needed or if button count changed
+      if (!this.previousButtonStates[i] || this.previousButtonStates[i].length !== gamepad.buttons.length) {
+        this.previousButtonStates[i] = new Array(gamepad.buttons.length).fill(false);
+      }
+
+      for (let j = 0; j < gamepad.buttons.length; j++) {
+        const button = gamepad.buttons[j];
+        // Check for pressed state or analog value threshold (for triggers)
+        const isPressed = button.pressed || (typeof button === 'object' && 'value' in button && (button as any).value > 0.5);
+        const wasPressed = this.previousButtonStates[i][j];
+
+        if (isPressed && !wasPressed) {
+          // Button down event
+          this.handleGamepadButtonPress(j);
+        }
+
+        this.previousButtonStates[i][j] = isPressed;
+      }
+    }
+
+    this.animationFrameId = requestAnimationFrame(this.pollGamepads);
+  }
+
+  private handleGamepadButtonPress(buttonIndex: number): void {
+    const key = GAMEPAD_BUTTON_MAP[buttonIndex];
+    if (key) {
+      this.processInput(key);
+    }
+  }
+
+  private processInput(key: string, code?: string): void {
+    if (this.onInput) {
+      this.onInput(key);
+    }
+
     const expectedKey = this.sequence[this.currentIndex];
     
     // Check if the pressed key matches the expected key in the sequence
-    if (event.key === expectedKey || event.code === expectedKey) {
+    if (key === expectedKey || (code && code === expectedKey)) {
       this.currentIndex++;
       
       // Reset timeout on each correct key press
@@ -164,7 +277,7 @@ export class KeySequenceListener {
         this.reset();
         
         // Check if the current key could be the start of the sequence
-        if (event.key === this.sequence[0] || event.code === this.sequence[0]) {
+        if (key === this.sequence[0] || (code && code === this.sequence[0])) {
           this.currentIndex = 1;
           this.startTimeout();
           

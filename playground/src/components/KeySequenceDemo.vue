@@ -48,6 +48,31 @@
       </button>
     </div>
 
+    <div class="card gamepad-mode">
+      <h2>Gamepad Mode 🎮</h2>
+      <div class="status-indicator" :class="{ connected: gamepadConnected }">
+        Status: {{ gamepadConnected ? 'Connected' : 'Disconnected (Press any button)' }}
+      </div>
+      <p>Press: <kbd>↑</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>B</kbd> <kbd>A</kbd></p>
+      
+      <div class="progress-bar">
+        <div class="progress-fill" :style="{ width: (gamepadProgress / 10) * 100 + '%' }"></div>
+      </div>
+      
+      <div v-if="gamepadActivated" class="success-message">
+        🎮 Gamepad Konami Code Activated!
+      </div>
+
+      <div class="key-history">
+        <h3>Recent Gamepad Inputs:</h3>
+        <div class="keys">
+          <span v-for="(key, index) in gamepadHistory" :key="index" class="key-item">
+            {{ key }}
+          </span>
+        </div>
+      </div>
+    </div>
+
     <div class="card controls">
       <h3>Controls</h3>
       <button @click="resetProgress">Reset Progress</button>
@@ -58,13 +83,17 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { KeySequenceListener, KONAMI_CODE } from '@daye-cli/keyboard-sequence-listener'
+import { KeySequenceListener, KONAMI_CODE, GamepadButtons } from '@daye-cli/keyboard-sequence-listener'
 
 const sequence = ref(KONAMI_CODE)
 const progress = ref(0)
 const activated = ref(false)
 const customActivated = ref(false)
 const onceActivated = ref(false)
+const gamepadActivated = ref(false)
+const gamepadConnected = ref(false)
+const gamepadProgress = ref(0)
+const gamepadHistory = ref<string[]>([])
 const onceListenerActive = ref(true)
 const keyHistory = ref<string[]>([])
 const isListening = ref(true)
@@ -74,7 +103,17 @@ const timeoutShaking = ref(false)
 let konamiListener: KeySequenceListener | null = null
 let customListener: KeySequenceListener | null = null
 let onceListener: KeySequenceListener | null = null
+let gamepadListener: KeySequenceListener | null = null
 let handleKeyDown: ((event: KeyboardEvent) => void) | null = null
+let handleGamepadConnect: ((event: GamepadEvent) => void) | null = null
+let handleGamepadDisconnect: ((event: GamepadEvent) => void) | null = null
+
+const updateGamepadHistory = (key: string) => {
+  gamepadHistory.value.unshift(key)
+  if (gamepadHistory.value.length > 10) {
+    gamepadHistory.value.pop()
+  }
+}
 
 const progressPercentage = computed(() => {
   return (progress.value / sequence.value.length) * 100
@@ -121,6 +160,11 @@ const resetProgress = () => {
     customListener.reset()
     customActivated.value = false
   }
+  if (gamepadListener) {
+    gamepadListener.reset()
+    gamepadActivated.value = false
+    gamepadProgress.value = 0
+  }
 }
 
 const toggleListener = () => {
@@ -128,12 +172,14 @@ const toggleListener = () => {
     konamiListener?.stop()
     customListener?.stop()
     onceListener?.stop()
+    gamepadListener?.stop()
     if (handleKeyDown) {
       window.removeEventListener('keydown', handleKeyDown)
     }
   } else {
     konamiListener?.start()
     customListener?.start()
+    gamepadListener?.start()
     if (onceListenerActive.value) {
       onceListener?.start()
     }
@@ -179,9 +225,11 @@ onMounted(() => {
     },
     onMismatch: () => {
       triggerErrorShake()
+      progress.value = 0
     },
     onTimeout: () => {
       triggerTimeoutShake()
+      progress.value = 0
     },
     timeout: 5000,
     resetOnMismatch: true,
@@ -216,6 +264,46 @@ onMounted(() => {
   })
   onceListener.start()
 
+  // Gamepad listener
+  gamepadListener = new KeySequenceListener({
+    sequence: [
+      GamepadButtons.Up,
+      GamepadButtons.Up,
+      GamepadButtons.Down,
+      GamepadButtons.Down,
+      GamepadButtons.Left,
+      GamepadButtons.Right,
+      GamepadButtons.Left,
+      GamepadButtons.Right,
+      GamepadButtons.B,
+      GamepadButtons.A
+    ],
+    enableGamepad: true,
+    onMatch: () => {
+      gamepadActivated.value = true
+      setTimeout(() => {
+        gamepadActivated.value = false
+      }, 3000)
+    },
+    onProgress: (current) => {
+      gamepadProgress.value = current
+    },
+    onInput: (key) => {
+      updateGamepadHistory(key)
+    },
+    onMismatch: () => {
+      triggerErrorShake()
+      gamepadProgress.value = 0
+    },
+    onTimeout: () => {
+      triggerTimeoutShake()
+      gamepadProgress.value = 0
+    },
+    timeout: 5000,
+    resetOnMismatch: true,
+  })
+  gamepadListener.start()
+
   // Track progress and key history
   handleKeyDown = (event: KeyboardEvent) => {
     if (konamiListener) {
@@ -226,18 +314,57 @@ onMounted(() => {
 
   window.addEventListener('keydown', handleKeyDown!)
 
+  // Gamepad connection handlers
+  handleGamepadConnect = () => {
+    gamepadConnected.value = true
+  }
+  handleGamepadDisconnect = () => {
+    gamepadConnected.value = false
+  }
+  window.addEventListener('gamepadconnected', handleGamepadConnect)
+  window.addEventListener('gamepaddisconnected', handleGamepadDisconnect)
+  
+  // Check initial state
+  if (navigator.getGamepads && navigator.getGamepads()[0]) {
+    gamepadConnected.value = true
+  }
+
   onUnmounted(() => {
     konamiListener?.destroy()
     customListener?.destroy()
     onceListener?.destroy()
+    gamepadListener?.destroy()
     if (handleKeyDown) {
       window.removeEventListener('keydown', handleKeyDown)
+    }
+    if (handleGamepadConnect) {
+      window.removeEventListener('gamepadconnected', handleGamepadConnect)
+    }
+    if (handleGamepadDisconnect) {
+      window.removeEventListener('gamepaddisconnected', handleGamepadDisconnect)
     }
   })
 })
 </script>
 
 <style scoped>
+.status-indicator {
+  display: inline-block;
+  padding: 0.4em 0.8em;
+  border-radius: 4px;
+  background: rgba(255, 50, 50, 0.2);
+  color: #ff6b6b;
+  font-size: 0.9em;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 50, 50, 0.3);
+}
+
+.status-indicator.connected {
+  background: rgba(50, 255, 100, 0.2);
+  color: #42b883;
+  border-color: rgba(50, 255, 100, 0.3);
+}
+
 .demo {
   display: flex;
   flex-direction: column;

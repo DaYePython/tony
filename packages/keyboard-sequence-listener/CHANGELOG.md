@@ -1,5 +1,11 @@
 # @daye-cli/keyboard-sequence-listener
 
+## 1.0.4
+
+### Patch Changes
+
+- feat: add gamepad support
+
 ## 1.0.3
 
 ### Patch Changes

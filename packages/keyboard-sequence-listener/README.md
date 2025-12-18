@@ -160,6 +160,7 @@ interface KeySequenceListenerOptions {
 - `onTimeout` - Optional callback when too much time passes between keys
 - `timeout` - Milliseconds before sequence auto-resets (default: 5000ms)
 - `once` - If true, listener stops automatically after first match
+- `enableGamepad` - Whether to enable gamepad support (default: false)
 
 #### Methods
 
@@ -181,6 +182,48 @@ import { KONAMI_CODE } from '@daye-cli/keyboard-sequence-listener';
 **Available Constants:**
 
 - `KONAMI_CODE` - The classic ↑↑↓↓←→←→BA sequence
+
+### Gamepad Support
+
+The library also supports gamepad input sequences. You can mix keyboard and gamepad inputs in the same sequence.
+
+```typescript
+import { KeySequenceListener, GamepadButtons } from '@daye-cli/keyboard-sequence-listener';
+
+const listener = new KeySequenceListener({
+  sequence: [
+    GamepadButtons.Up,
+    GamepadButtons.Up,
+    GamepadButtons.Down,
+    GamepadButtons.Down,
+    GamepadButtons.Left,
+    GamepadButtons.Right,
+    GamepadButtons.Left,
+    GamepadButtons.Right,
+    GamepadButtons.B,
+    GamepadButtons.A
+  ],
+  enableGamepad: true, // Enable gamepad support
+  onMatch: () => {
+    console.log('Gamepad sequence matched!');
+  }
+});
+
+listener.start();
+```
+
+**Supported Gamepad Buttons:**
+
+- `GamepadButtons.A` (Bottom button)
+- `GamepadButtons.B` (Right button)
+- `GamepadButtons.X` (Left button)
+- `GamepadButtons.Y` (Top button)
+- `GamepadButtons.LB`, `GamepadButtons.RB` (Bumpers)
+- `GamepadButtons.LT`, `GamepadButtons.RT` (Triggers)
+- `GamepadButtons.Up`, `GamepadButtons.Down`, `GamepadButtons.Left`, `GamepadButtons.Right` (D-Pad)
+- `GamepadButtons.Start`, `GamepadButtons.Back`
+- `GamepadButtons.LS`, `GamepadButtons.RS` (Stick clicks)
+- `GamepadButtons.Home`
 
 ## Key Code Reference
 
