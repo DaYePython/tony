@@ -28,9 +28,37 @@
 
     <div class="card custom-sequence">
       <h2>Custom Sequence</h2>
-      <p>Try typing: <strong>HELLO</strong></p>
-      <div v-if="customActivated" class="success-message">
-        ✅ You typed "HELLO"!
+      <div v-if="!recordedSequence.length">
+        <p>Record your own sequence!</p>
+        <button @click="toggleRecording" :class="{ recording: isRecording }">
+          {{ isRecording ? '⏹️ Stop Recording' : '⏺️ Start Recording' }}
+        </button>
+        <div v-if="isRecording" class="recording-indicator">
+          🔴 Recording... Press any keys
+        </div>
+      </div>
+      <div v-else>
+        <p>Your sequence: 
+          <span v-for="(key, index) in recordedSequence" :key="index">
+            <kbd>{{ formatKey(key) }}</kbd>
+          </span>
+        </p>
+        <div class="progress-bar">
+          <div class="progress-fill" :style="{ width: (customProgress / recordedSequence.length) * 100 + '%' }"></div>
+        </div>
+        <p class="progress-text">Progress: {{ customProgress }} / {{ recordedSequence.length }}</p>
+        <div v-if="customActivated" class="success-message">
+          ✅ Sequence matched!
+        </div>
+        <div class="button-group">
+          <button @click="clearRecordedSequence">Clear Sequence</button>
+          <button @click="toggleRecording" :class="{ recording: isRecording }">
+            {{ isRecording ? '⏹️ Stop Recording' : '⏺️ Re-record' }}
+          </button>
+        </div>
+        <div v-if="isRecording" class="recording-indicator">
+          🔴 Recording... Press any keys
+        </div>
       </div>
     </div>
 
@@ -89,6 +117,7 @@ const sequence = ref(KONAMI_CODE)
 const progress = ref(0)
 const activated = ref(false)
 const customActivated = ref(false)
+const customProgress = ref(0)
 const onceActivated = ref(false)
 const gamepadActivated = ref(false)
 const gamepadConnected = ref(false)
@@ -99,12 +128,16 @@ const keyHistory = ref<string[]>([])
 const isListening = ref(true)
 const errorShaking = ref(false)
 const timeoutShaking = ref(false)
+const isRecording = ref(false)
+const recordedSequence = ref<string[]>([])
+const recordingKeys = ref<string[]>([])
 
 let konamiListener: KeySequenceListener | null = null
 let customListener: KeySequenceListener | null = null
 let onceListener: KeySequenceListener | null = null
 let gamepadListener: KeySequenceListener | null = null
 let handleKeyDown: ((event: KeyboardEvent) => void) | null = null
+let handleRecording: ((event: KeyboardEvent) => void) | null = null
 let handleGamepadConnect: ((event: GamepadEvent) => void) | null = null
 let handleGamepadDisconnect: ((event: GamepadEvent) => void) | null = null
 
@@ -213,6 +246,79 @@ const restartOnceListener = () => {
   onceListener.start()
 }
 
+const toggleRecording = () => {
+  if (isRecording.value) {
+    // Stop recording
+    isRecording.value = false
+    if (recordingKeys.value.length > 0) {
+      recordedSequence.value = [...recordingKeys.value]
+      // Create a new custom listener with the recorded sequence
+      createCustomListener()
+    }
+    recordingKeys.value = []
+    if (handleRecording) {
+      window.removeEventListener('keydown', handleRecording)
+    }
+  } else {
+    // Start recording
+    isRecording.value = true
+    recordingKeys.value = []
+    customActivated.value = false
+    customProgress.value = 0
+    
+    // Stop existing custom listener during recording
+    customListener?.stop()
+    
+    handleRecording = (event: KeyboardEvent) => {
+      event.preventDefault()
+      const key = event.key.toLowerCase()
+      recordingKeys.value.push(key)
+    }
+    window.addEventListener('keydown', handleRecording)
+  }
+}
+
+const clearRecordedSequence = () => {
+  recordedSequence.value = []
+  recordingKeys.value = []
+  customActivated.value = false
+  customProgress.value = 0
+  customListener?.destroy()
+  customListener = null
+}
+
+const createCustomListener = () => {
+  // Destroy old custom listener if exists
+  customListener?.destroy()
+  
+  if (recordedSequence.value.length === 0) {
+    return
+  }
+  
+  // Create new custom listener with recorded sequence
+  customListener = new KeySequenceListener({
+    sequence: recordedSequence.value,
+    onMatch: () => {
+      customActivated.value = true
+      setTimeout(() => {
+        customActivated.value = false
+      }, 3000)
+    },
+    onProgress: (current) => {
+      customProgress.value = current
+    },
+    onMismatch: () => {
+      customProgress.value = 0
+    },
+    onTimeout: () => {
+      customProgress.value = 0
+    },
+    timeout: 5000,
+    resetOnMismatch: true,
+  })
+  customListener.start()
+}
+
 onMounted(() => {
   // Konami Code listener
   konamiListener = new KeySequenceListener({
@@ -236,18 +342,8 @@ onMounted(() => {
   })
   konamiListener.start()
 
-  // Custom sequence listener (HELLO)
-  customListener = new KeySequenceListener({
-    sequence: ['h', 'e', 'l', 'l', 'o'],
-    onMatch: () => {
-      customActivated.value = true
-      setTimeout(() => {
-        customActivated.value = false
-      }, 3000)
-    },
-    timeout: 3000,
-  })
-  customListener.start()
+  // Custom sequence listener - will be created when user records a sequence
+  // No initial listener
 
   // Once mode listener (1-2-3)
   onceListener = new KeySequenceListener({
@@ -338,6 +434,9 @@ onMounted(() => {
     gamepadListener?.destroy()
     if (handleKeyDown) {
       window.removeEventListener('keydown', handleKeyDown)
+    }
+    if (handleRecording) {
+      window.removeEventListener('keydown', handleRecording)
     }
     if (handleGamepadConnect) {
       window.removeEventListener('gamepadconnected', handleGamepadConnect)
@@ -580,6 +679,52 @@ kbd {
 .custom-sequence {
   background: rgba(66, 184, 131, 0.05);
   border-color: rgba(66, 184, 131, 0.2);
+}
+
+.recording-indicator {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  border-radius: 8px;
+  color: #ff6b6b;
+  font-weight: bold;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+button.recording {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+  animation: recordingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes recordingPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+  }
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.button-group button {
+  flex: 1;
+  min-width: 150px;
 }
 
 @media (prefers-color-scheme: light) {
