@@ -28,6 +28,9 @@
 
     <div class="card custom-sequence">
       <h2>Custom Sequence</h2>
+      <div v-if="customSequenceError" class="error-message">
+        ⚠️ {{ customSequenceError }}
+      </div>
       <div v-if="!recordedSequence.length">
         <p>Record your own sequence!</p>
         <button @click="toggleRecording" :class="{ recording: isRecording }">
@@ -131,6 +134,7 @@ const timeoutShaking = ref(false)
 const isRecording = ref(false)
 const recordedSequence = ref<string[]>([])
 const recordingKeys = ref<string[]>([])
+const customSequenceError = ref('')
 
 let konamiListener: KeySequenceListener | null = null
 let customListener: KeySequenceListener | null = null
@@ -251,9 +255,21 @@ const toggleRecording = () => {
     // Stop recording
     isRecording.value = false
     if (recordingKeys.value.length > 0) {
-      recordedSequence.value = [...recordingKeys.value]
-      // Create a new custom listener with the recorded sequence
-      createCustomListener()
+      // Validate: Check if sequence starts with ArrowUp to prevent Konami Code interference
+      const firstKey = recordingKeys.value[0]?.toLowerCase()
+      if (firstKey === 'arrowup') {
+        customSequenceError.value = 'Custom sequence cannot start with ArrowUp to prevent interference with Konami Code!'
+        recordingKeys.value = []
+        // Clear error after 5 seconds
+        setTimeout(() => {
+          customSequenceError.value = ''
+        }, 5000)
+      } else {
+        customSequenceError.value = ''
+        recordedSequence.value = [...recordingKeys.value]
+        // Create a new custom listener with the recorded sequence
+        createCustomListener()
+      }
     }
     recordingKeys.value = []
     if (handleRecording) {
@@ -265,6 +281,7 @@ const toggleRecording = () => {
     recordingKeys.value = []
     customActivated.value = false
     customProgress.value = 0
+    customSequenceError.value = ''
     
     // Stop existing custom listener during recording
     customListener?.stop()
@@ -283,6 +300,7 @@ const clearRecordedSequence = () => {
   recordingKeys.value = []
   customActivated.value = false
   customProgress.value = 0
+  customSequenceError.value = ''
   customListener?.destroy()
   customListener = null
 }
@@ -626,6 +644,28 @@ kbd {
   margin: 1rem 0;
   color: #646cff;
   font-weight: bold;
+}
+
+.error-message {
+  background: rgba(255, 50, 50, 0.2);
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  color: #ff6b6b;
+  font-weight: bold;
+  border: 1px solid rgba(255, 50, 50, 0.3);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .once-mode {
