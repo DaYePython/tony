@@ -574,10 +574,21 @@ onMounted(() => {
   color: #646cff;
   box-shadow: 0 2px 8px rgba(100, 108, 255, 0.2),
               inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-bottom: 3px solid #646cff;
 }
 
 .tabs-trigger[data-state="active"]::before {
   opacity: 1;
+}
+
+.tabs-trigger[data-state="active"]::after {
+  content: '●';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #646cff;
+  font-size: 0.5em;
 }
 
 .tab-icon {
