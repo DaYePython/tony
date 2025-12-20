@@ -189,17 +189,10 @@ const switchTab = (tab: 'keyboard' | 'gamepad') => {
   activeTab.value = tab
 }
 
-// Auto-switch to keyboard tab when keyboard input is detected
-const handleKeyboardInput = () => {
-  if (activeTab.value !== 'keyboard') {
-    activeTab.value = 'keyboard'
-  }
-}
-
-// Auto-switch to gamepad tab when gamepad input is detected
-const handleGamepadInput = () => {
-  if (activeTab.value !== 'gamepad') {
-    activeTab.value = 'gamepad'
+// Auto-switch to the specified tab only if not already on it
+const switchToTab = (tab: 'keyboard' | 'gamepad') => {
+  if (activeTab.value !== tab) {
+    activeTab.value = tab
   }
 }
 
@@ -463,8 +456,8 @@ onMounted(() => {
     onInput: (key, source) => {
       if (source === 'gamepad') {
         updateGamepadHistory(key)
-        // Auto-switch to gamepad tab on gamepad input
-        handleGamepadInput()
+        // Auto-switch to gamepad tab on gamepad input (only if not already on gamepad tab)
+        switchToTab('gamepad')
       }
     },
     onMismatch: () => {
@@ -486,8 +479,8 @@ onMounted(() => {
       progress.value = konamiListener.getProgress()
     }
     updateKeyHistory(event.key)
-    // Auto-switch to keyboard tab on keyboard input
-    handleKeyboardInput()
+    // Auto-switch to keyboard tab on keyboard input (only if not already on keyboard tab)
+    switchToTab('keyboard')
   }
 
   window.addEventListener('keydown', handleKeyDown!)
