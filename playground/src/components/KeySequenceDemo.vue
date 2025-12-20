@@ -1,120 +1,152 @@
 <template>
-  <div class="demo" :class="{ 'error-shake': errorShaking, 'timeout-shake': timeoutShaking }">
-    <div class="card">
-      <h2>Try the Konami Code!</h2>
-      <p class="instruction">
-        Press: <kbd>↑</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>B</kbd> <kbd>A</kbd>
-      </p>
-      
-      <div class="progress-bar">
-        <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
-      </div>
-      <p class="progress-text">Progress: {{ progress }} / {{ sequence.length }}</p>
+  <div class="demo-wrapper">
+    <TabsRoot v-model="activeTab" class="tabs-root">
+      <TabsList class="tabs-list" aria-label="Demo modes">
+        <TabsTrigger value="keyboard" class="tabs-trigger">
+          <span class="tab-icon">⌨️</span>
+          Keyboard
+        </TabsTrigger>
+        <TabsTrigger value="gamepad" class="tabs-trigger">
+          <span class="tab-icon">🎮</span>
+          Gamepad
+        </TabsTrigger>
+      </TabsList>
 
-      <div v-if="activated" class="success-message">
-        <h3>🎉 Konami Code Activated!</h3>
-        <p>You unlocked the secret!</p>
-      </div>
+      <!-- Tab Content -->
+      <div class="demo" :class="{ 'error-shake': errorShaking, 'timeout-shake': timeoutShaking }">
+      <!-- Keyboard Tab -->
+      <TabsContent value="keyboard" class="tab-content">
+        <div class="card">
+          <h2>Try the Konami Code!</h2>
+          <p class="instruction">
+            Press: <kbd>↑</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>B</kbd> <kbd>A</kbd>
+          </p>
+            
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
+            </div>
+            <p class="progress-text">Progress: {{ progress }} / {{ sequence.length }}</p>
 
-      <div class="key-history">
-        <h3>Recent Keys:</h3>
-        <div class="keys">
-          <span v-for="(key, index) in keyHistory" :key="index" class="key-item">
-            {{ formatKey(key) }}
-          </span>
-        </div>
-      </div>
-    </div>
+            <div v-if="activated" class="success-message">
+              <h3>🎉 Konami Code Activated!</h3>
+              <p>You unlocked the secret!</p>
+            </div>
 
-    <div class="card custom-sequence">
-      <h2>Custom Sequence</h2>
-      <div v-if="customSequenceError" class="error-message">
-        ⚠️ {{ customSequenceError }}
-      </div>
-      <div v-if="!recordedSequence.length">
-        <p>Record your own sequence!</p>
-        <button @click="toggleRecording" :class="{ recording: isRecording }">
-          {{ isRecording ? '⏹️ Stop Recording' : '⏺️ Start Recording' }}
-        </button>
-        <div v-if="isRecording" class="recording-indicator">
-          🔴 Recording... Press any keys
-        </div>
-      </div>
-      <div v-else>
-        <p>Your sequence: 
-          <span v-for="(key, index) in recordedSequence" :key="index">
-            <kbd>{{ formatKey(key) }}</kbd>
-          </span>
-        </p>
-        <div class="progress-bar">
-          <div class="progress-fill" :style="{ width: (customProgress / recordedSequence.length) * 100 + '%' }"></div>
-        </div>
-        <p class="progress-text">Progress: {{ customProgress }} / {{ recordedSequence.length }}</p>
-        <div v-if="customActivated" class="success-message">
-          ✅ Sequence matched!
-        </div>
-        <div class="button-group">
-          <button @click="clearRecordedSequence">Clear Sequence</button>
-          <button @click="toggleRecording" :class="{ recording: isRecording }">
-            {{ isRecording ? '⏹️ Stop Recording' : '⏺️ Re-record' }}
-          </button>
-        </div>
-        <div v-if="isRecording" class="recording-indicator">
-          🔴 Recording... Press any keys
-        </div>
-      </div>
-    </div>
+            <div class="key-history">
+              <h3>Recent Keys:</h3>
+              <div class="keys">
+                <span v-for="(key, index) in keyHistory" :key="index" class="key-item">
+                  {{ formatKey(key) }}
+                </span>
+              </div>
+            </div>
+          </div>
 
-    <div class="card once-mode">
-      <h2>Once Mode 🎯</h2>
-      <p>Press: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> (triggers only once)</p>
-      <div v-if="onceActivated" class="success-message">
-        🎯 Triggered! This listener has stopped.
-      </div>
-      <div v-if="!onceListenerActive" class="info-message">
-        ⚠️ Listener stopped after first match
-      </div>
-      <button @click="restartOnceListener" :disabled="onceListenerActive">
-        Restart Once Listener
-      </button>
-    </div>
+          <div class="card custom-sequence">
+            <h2>Custom Sequence</h2>
+            <div v-if="customSequenceError" class="error-message">
+              ⚠️ {{ customSequenceError }}
+            </div>
+            <div v-if="!recordedSequence.length">
+              <p>Record your own sequence!</p>
+              <button @click="toggleRecording" :class="{ recording: isRecording }">
+                {{ isRecording ? '⏹️ Stop Recording' : '⏺️ Start Recording' }}
+              </button>
+              <div v-if="isRecording" class="recording-indicator">
+                🔴 Recording... Press any keys
+              </div>
+            </div>
+            <div v-else>
+              <p>Your sequence: 
+                <span v-for="(key, index) in recordedSequence" :key="index">
+                  <kbd>{{ formatKey(key) }}</kbd>
+                </span>
+              </p>
+              <div class="progress-bar">
+                <div class="progress-fill" :style="{ width: (customProgress / recordedSequence.length) * 100 + '%' }"></div>
+              </div>
+              <p class="progress-text">Progress: {{ customProgress }} / {{ recordedSequence.length }}</p>
+              <div v-if="customActivated" class="success-message">
+                ✅ Sequence matched!
+              </div>
+              <div class="button-group">
+                <button @click="clearRecordedSequence">Clear Sequence</button>
+                <button @click="toggleRecording" :class="{ recording: isRecording }">
+                  {{ isRecording ? '⏹️ Stop Recording' : '⏺️ Re-record' }}
+                </button>
+              </div>
+              <div v-if="isRecording" class="recording-indicator">
+                🔴 Recording... Press any keys
+              </div>
+            </div>
+          </div>
 
-    <div class="card gamepad-mode">
-      <h2>Gamepad Mode 🎮</h2>
-      <div class="status-indicator" :class="{ connected: gamepadConnected }">
-        Status: {{ gamepadConnected ? 'Connected' : 'Disconnected (Press any button)' }}
-      </div>
-      <p>Press: <kbd>↑</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>B</kbd> <kbd>A</kbd></p>
-      
-      <div class="progress-bar">
-        <div class="progress-fill" :style="{ width: (gamepadProgress / 10) * 100 + '%' }"></div>
-      </div>
-      
-      <div v-if="gamepadActivated" class="success-message">
-        🎮 Gamepad Konami Code Activated!
-      </div>
+          <div class="card once-mode">
+            <h2>Once Mode 🎯</h2>
+            <p>Press: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> (triggers only once)</p>
+            <div v-if="onceActivated" class="success-message">
+              🎯 Triggered! This listener has stopped.
+            </div>
+            <div v-if="!onceListenerActive" class="info-message">
+              ⚠️ Listener stopped after first match
+            </div>
+            <button @click="restartOnceListener" :disabled="onceListenerActive">
+              Restart Once Listener
+            </button>
+          </div>
 
-      <div class="key-history">
-        <h3>Recent Gamepad Inputs:</h3>
-        <div class="keys">
-          <span v-for="(key, index) in gamepadHistory" :key="index" class="key-item">
-            {{ key }}
-          </span>
-        </div>
-      </div>
-    </div>
+          <div class="card controls">
+            <h3>Controls</h3>
+            <button @click="resetProgress">Reset Progress</button>
+            <button @click="toggleListener">{{ isListening ? 'Stop' : 'Start' }} Listener</button>
+          </div>
+        </TabsContent>
 
-    <div class="card controls">
-      <h3>Controls</h3>
-      <button @click="resetProgress">Reset Progress</button>
-      <button @click="toggleListener">{{ isListening ? 'Stop' : 'Start' }} Listener</button>
-    </div>
+        <!-- Gamepad Tab -->
+        <TabsContent value="gamepad" class="tab-content">
+          <div class="card gamepad-mode">
+            <h2>Gamepad Mode 🎮</h2>
+            <div class="status-indicator" :class="{ connected: gamepadConnected }">
+              Status: {{ gamepadConnected ? 'Connected' : 'Disconnected (Press any button)' }}
+            </div>
+            <p>Press: <kbd>↑</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>B</kbd> <kbd>A</kbd></p>
+            
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: (gamepadProgress / 10) * 100 + '%' }"></div>
+            </div>
+            
+            <div v-if="gamepadActivated" class="success-message">
+              🎮 Gamepad Konami Code Activated!
+            </div>
+
+            <div class="key-history">
+              <h3>Recent Gamepad Inputs:</h3>
+              <div class="keys">
+                <span v-for="(key, index) in gamepadHistory" :key="index" class="key-item">
+                  {{ key }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card controls">
+            <h3>Controls</h3>
+            <button @click="resetProgress">Reset Progress</button>
+            <button @click="toggleListener">{{ isListening ? 'Stop' : 'Start' }} Listener</button>
+          </div>
+        </TabsContent>
+      </div>
+    </TabsRoot>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { KeySequenceListener, KONAMI_CODE, GamepadButtons } from '@daye-cli/keyboard-sequence-listener'
+import { TabsRoot, TabsList, TabsTrigger, TabsContent } from 'reka-ui'
+
+// Tab management
+const activeTab = ref<'keyboard' | 'gamepad'>('keyboard')
 
 const sequence = ref(KONAMI_CODE)
 const progress = ref(0)
@@ -144,6 +176,12 @@ let handleKeyDown: ((event: KeyboardEvent) => void) | null = null
 let handleRecording: ((event: KeyboardEvent) => void) | null = null
 let handleGamepadConnect: ((event: GamepadEvent) => void) | null = null
 let handleGamepadDisconnect: ((event: GamepadEvent) => void) | null = null
+
+const switchTab = (tab: 'keyboard' | 'gamepad', force: boolean = true) => {
+  if (force || activeTab.value !== tab) {
+    activeTab.value = tab
+  }
+}
 
 const updateGamepadHistory = (key: string) => {
   gamepadHistory.value.unshift(key)
@@ -405,6 +443,8 @@ onMounted(() => {
     onInput: (key, source) => {
       if (source === 'gamepad') {
         updateGamepadHistory(key)
+        // Auto-switch to gamepad tab on gamepad input
+        switchTab('gamepad', false)
       }
     },
     onMismatch: () => {
@@ -426,6 +466,8 @@ onMounted(() => {
       progress.value = konamiListener.getProgress()
     }
     updateKeyHistory(event.key)
+    // Auto-switch to keyboard tab on keyboard input
+    switchTab('keyboard', false)
   }
 
   window.addEventListener('keydown', handleKeyDown!)
@@ -467,6 +509,108 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.demo-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Reka UI Tabs Styling */
+.tabs-root {
+  width: 100%;
+}
+
+.tabs-list {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.tabs-trigger {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.tabs-trigger::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(100, 108, 255, 0.1), rgba(66, 184, 131, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tabs-trigger:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.tabs-trigger:hover::before {
+  opacity: 1;
+}
+
+.tabs-trigger[data-state="active"] {
+  background: linear-gradient(135deg, rgba(100, 108, 255, 0.15), rgba(66, 184, 131, 0.12));
+  color: #646cff;
+  box-shadow: 0 2px 8px rgba(100, 108, 255, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-bottom: 3px solid #646cff;
+}
+
+.tabs-trigger[data-state="active"]::before {
+  opacity: 1;
+}
+
+.tabs-trigger[data-state="active"]::after {
+  content: '●';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #646cff;
+  font-size: 0.5em;
+}
+
+.tab-icon {
+  font-size: 1.25em;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.tab-content {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .status-indicator {
   display: inline-block;
   padding: 0.4em 0.8em;
@@ -487,95 +631,158 @@ onMounted(() => {
 .demo {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+}
+
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .card {
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
+              0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15),
+              0 2px 6px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 h2 {
   font-size: 1.8em;
   margin-bottom: 1rem;
-  color: #646cff;
+  background: linear-gradient(135deg, #646cff, #42b883);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
 }
 
 h3 {
   font-size: 1.3em;
   margin-bottom: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
 }
 
 .instruction {
-  font-size: 1.1em;
+  font-size: 1.05em;
   margin-bottom: 1.5rem;
   line-height: 1.8;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 kbd {
   display: inline-block;
-  padding: 0.3em 0.6em;
+  padding: 0.4em 0.75em;
   font-size: 0.9em;
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  margin: 0 0.2em;
-  font-family: monospace;
+  border-radius: 6px;
+  margin: 0 0.25em;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-weight: 600;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .progress-bar {
   width: 100%;
-  height: 30px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
   overflow: hidden;
   margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #646cff, #42b883);
-  transition: width 0.3s ease;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(100, 108, 255, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .progress-text {
-  font-size: 1.2em;
-  font-weight: bold;
+  font-size: 1.1em;
+  font-weight: 700;
   color: #42b883;
   margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .success-message {
-  background: linear-gradient(135deg, #42b883, #35495e);
+  background: linear-gradient(135deg, rgba(66, 184, 131, 0.2), rgba(100, 108, 255, 0.15));
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 12px;
   margin: 1.5rem 0;
-  animation: bounce 0.5s ease;
+  animation: successBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  border: 1px solid rgba(66, 184, 131, 0.3);
+  box-shadow: 0 4px 16px rgba(66, 184, 131, 0.2);
 }
 
 .success-message h3 {
-  font-size: 2em;
+  font-size: 1.8em;
   margin: 0;
-  color: white;
+  color: #42b883;
+  font-weight: 700;
 }
 
 .success-message p {
   margin-top: 0.5rem;
-  font-size: 1.2em;
+  font-size: 1.1em;
   color: rgba(255, 255, 255, 0.9);
 }
 
-@keyframes bounce {
+@keyframes successBounce {
   0%, 100% {
     transform: scale(1);
   }
-  50% {
+  25% {
     transform: scale(1.05);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  75% {
+    transform: scale(1.02);
   }
 }
 
@@ -637,40 +844,64 @@ kbd {
   animation: timeoutShake 0.6s ease, timeoutShadow 0.6s ease;
 }
 
-.info-message {
-  background: rgba(100, 108, 255, 0.2);
-  padding: 1rem;
+.status-indicator {
+  display: inline-block;
+  padding: 0.5em 1em;
   border-radius: 8px;
+  background: rgba(255, 50, 50, 0.15);
+  color: #ff6b6b;
+  font-size: 0.95em;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 50, 50, 0.3);
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(255, 50, 50, 0.2);
+}
+
+.status-indicator.connected {
+  background: rgba(50, 255, 100, 0.15);
+  color: #42b883;
+  border-color: rgba(50, 255, 100, 0.3);
+  box-shadow: 0 2px 4px rgba(50, 255, 100, 0.2);
+}
+
+.info-message {
+  background: rgba(100, 108, 255, 0.15);
+  padding: 1rem;
+  border-radius: 10px;
   margin: 1rem 0;
   color: #646cff;
-  font-weight: bold;
+  font-weight: 600;
+  border: 1px solid rgba(100, 108, 255, 0.3);
 }
 
 .error-message {
-  background: rgba(255, 50, 50, 0.2);
+  background: rgba(255, 50, 50, 0.15);
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: 10px;
   margin: 1rem 0;
   color: #ff6b6b;
-  font-weight: bold;
+  font-weight: 600;
   border: 1px solid rgba(255, 50, 50, 0.3);
-  animation: fadeIn 0.3s ease;
+  animation: fadeInShake 0.4s ease;
 }
 
-@keyframes fadeIn {
-  from {
+@keyframes fadeInShake {
+  0% {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateX(-10px);
   }
-  to {
+  50% {
+    transform: translateX(5px);
+  }
+  100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
 
 .once-mode {
-  background: rgba(255, 193, 7, 0.05);
-  border-color: rgba(255, 193, 7, 0.2);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.08), rgba(255, 152, 0, 0.05));
+  border-color: rgba(255, 193, 7, 0.25);
 }
 
 .once-mode button {
@@ -678,8 +909,9 @@ kbd {
 }
 
 .once-mode button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: none !important;
 }
 
 .key-history {
@@ -690,18 +922,34 @@ kbd {
 .keys {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.625rem;
   margin-top: 1rem;
 }
 
 .key-item {
   display: inline-block;
-  padding: 0.5em 1em;
-  background: rgba(100, 108, 255, 0.2);
-  border: 1px solid rgba(100, 108, 255, 0.4);
-  border-radius: 6px;
-  font-family: monospace;
-  font-weight: bold;
+  padding: 0.625em 1.125em;
+  background: linear-gradient(135deg, rgba(100, 108, 255, 0.2), rgba(66, 184, 131, 0.15));
+  border: 1px solid rgba(100, 108, 255, 0.35);
+  border-radius: 8px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  animation: keyPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes keyPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .controls {
@@ -709,73 +957,174 @@ kbd {
   gap: 1rem;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .controls button {
   flex: 1;
-  max-width: 200px;
+  min-width: 180px;
 }
 
 .custom-sequence {
-  background: rgba(66, 184, 131, 0.05);
-  border-color: rgba(66, 184, 131, 0.2);
+  background: linear-gradient(135deg, rgba(66, 184, 131, 0.08), rgba(100, 108, 255, 0.05));
+  border-color: rgba(66, 184, 131, 0.25);
 }
 
 .recording-indicator {
   margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(255, 0, 0, 0.1);
-  border: 1px solid rgba(255, 0, 0, 0.3);
-  border-radius: 8px;
+  padding: 1.125rem;
+  background: linear-gradient(135deg, rgba(255, 0, 0, 0.12), rgba(255, 100, 100, 0.08));
+  border: 1px solid rgba(255, 0, 0, 0.35);
+  border-radius: 10px;
   color: #ff6b6b;
-  font-weight: bold;
+  font-weight: 700;
   animation: pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 2px 8px rgba(255, 0, 0, 0.2);
 }
 
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.6;
+    opacity: 0.75;
+    transform: scale(0.98);
   }
 }
 
+button {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.75em 1.5em;
+  font-size: 1em;
+  font-weight: 600;
+  font-family: inherit;
+  background: linear-gradient(135deg, rgba(100, 108, 255, 0.15), rgba(66, 184, 131, 0.12));
+  color: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+button:hover {
+  border-color: rgba(100, 108, 255, 0.4);
+  background: linear-gradient(135deg, rgba(100, 108, 255, 0.25), rgba(66, 184, 131, 0.2));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
 button.recording {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.25), rgba(238, 90, 111, 0.2));
   animation: recordingPulse 1.5s ease-in-out infinite;
+  border-color: rgba(255, 107, 107, 0.4);
 }
 
 @keyframes recordingPulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7),
+                0 2px 4px rgba(0, 0, 0, 0.15);
   }
   50% {
-    box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+    box-shadow: 0 0 0 10px rgba(255, 0, 0, 0),
+                0 4px 8px rgba(255, 0, 0, 0.3);
   }
 }
 
 .button-group {
   display: flex;
-  gap: 1rem;
+  gap: 0.875rem;
   margin-top: 1rem;
   flex-wrap: wrap;
 }
 
 .button-group button {
   flex: 1;
-  min-width: 150px;
+  min-width: 160px;
 }
 
 @media (prefers-color-scheme: light) {
+  .tabs-list {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .tabs-trigger {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .tabs-trigger:hover {
+    color: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .tabs-trigger[data-state="active"] {
+    background: linear-gradient(135deg, rgba(100, 108, 255, 0.12), rgba(66, 184, 131, 0.1));
+    color: #646cff;
+  }
+
   .card {
-    background: rgba(0, 0, 0, 0.02);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.95));
     border-color: rgba(0, 0, 0, 0.1);
   }
-  
+
   kbd {
-    background: rgba(0, 0, 0, 0.05);
-    border-color: rgba(0, 0, 0, 0.1);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.05));
+    border-color: rgba(0, 0, 0, 0.15);
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  button {
+    background: linear-gradient(135deg, rgba(100, 108, 255, 0.12), rgba(66, 184, 131, 0.1));
+    color: rgba(0, 0, 0, 0.9);
+    border-color: rgba(0, 0, 0, 0.12);
+  }
+
+  button:hover {
+    background: linear-gradient(135deg, rgba(100, 108, 255, 0.2), rgba(66, 184, 131, 0.15));
+    border-color: rgba(100, 108, 255, 0.3);
+  }
+}
+
+@media (max-width: 768px) {
+  .tabs-trigger {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .tab-icon {
+    font-size: 1.1em;
+  }
+
+  .card {
+    padding: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.5em;
+  }
+
+  .controls {
+    flex-direction: column;
+  }
+
+  .controls button {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .button-group button {
+    width: 100%;
+    min-width: 100%;
   }
 }
 </style>
