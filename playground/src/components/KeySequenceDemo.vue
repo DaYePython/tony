@@ -437,15 +437,11 @@ onMounted(() => {
         gamepadActivated.value = false
       }, 3000)
     },
-    onProgress: (current) => {
+    onProgress: (current: number) => {
       gamepadProgress.value = current
     },
-    onInput: (key, source) => {
-      if (source === 'gamepad') {
-        updateGamepadHistory(key)
-        // Auto-switch to gamepad tab on gamepad input
-        switchTab('gamepad', false)
-      }
+    onInput: (key) => {
+      updateGamepadHistory(key)
     },
     onMismatch: () => {
       triggerErrorShake()
